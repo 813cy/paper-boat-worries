@@ -1,0 +1,349 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>고민 종이배</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sky-top:#1d2b4f; --sky-bot:#f3b58c;
+    --ink:#2f3a4f; --paper:#fffdf6; --paper-d:#ebe3c8; --rule:#ddd6c1;
+    --accent:#e58a5b; --accent-d:#c9703f;
+    --water1:#3f78a8; --water2:#2c587f;
+    --lh:28px;
+    --serif:"Gowun Batang","Nanum Myeongjo","Batang",serif;
+    --sans:"Gowun Dodum","Pretendard","Malgun Gothic","Apple SD Gothic Neo",sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family:var(--sans);
+    color:#fff; overflow:hidden;
+    background:linear-gradient(180deg,var(--sky-top) 0%,#6a5a8e 45%,var(--sky-bot) 100%);
+  }
+  .stars{position:fixed;inset:0;pointer-events:none;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 14%,#fff8 50%,transparent 51%),
+      radial-gradient(1px 1px at 28% 8%,#fff9 50%,transparent 51%),
+      radial-gradient(1.5px 1.5px at 47% 18%,#fff7 50%,transparent 51%),
+      radial-gradient(1px 1px at 63% 7%,#fffa 50%,transparent 51%),
+      radial-gradient(1.5px 1.5px at 81% 15%,#fff8 50%,transparent 51%),
+      radial-gradient(1px 1px at 92% 6%,#fff9 50%,transparent 51%),
+      radial-gradient(1px 1px at 74% 26%,#fff6 50%,transparent 51%),
+      radial-gradient(1px 1px at 8% 30%,#fff6 50%,transparent 51%);
+    animation:twinkle 5s ease-in-out infinite alternate}
+  @keyframes twinkle{from{opacity:.55}to{opacity:1}}
+
+  main{position:relative;z-index:2;height:100%;display:flex;flex-direction:column;align-items:center;
+    padding:24px 16px 0}
+  h1{margin:8px 0 4px;font-family:var(--serif);font-size:clamp(24px,4vw,32px);font-weight:700;letter-spacing:.04em;text-align:center}
+  .sub{margin:0 0 18px;font-size:15px;opacity:.88;text-align:center;line-height:1.7}
+
+  .stage{position:relative;width:min(560px,100%);min-height:380px;display:flex;justify-content:center}
+
+  /* 편지지: 줄 간격은 항상 --lh 로 일정 */
+  .card{
+    width:100%;background:var(--paper);color:var(--ink);border-radius:14px;
+    box-shadow:0 10px 30px #0004;padding:18px 20px 14px;
+    display:flex;flex-direction:column;gap:12px;height:fit-content;
+  }
+  textarea,.paper{
+    font-family:var(--serif);font-size:17px;line-height:var(--lh);letter-spacing:.01em;
+    color:var(--ink);
+    background-image:linear-gradient(transparent calc(var(--lh) - 1px),var(--rule) calc(var(--lh) - 1px));
+    background-size:100% var(--lh);
+    background-repeat:repeat-y;
+  }
+  textarea{
+    width:100%;height:calc(var(--lh) * 9);margin:0;padding:0;resize:none;border:0;outline:0;
+    background-color:transparent;background-attachment:local;
+  }
+  textarea::placeholder{color:#a29e8c}
+  .row{display:flex;justify-content:space-between;align-items:center;gap:12px}
+  .count{font-size:13px;color:#8a8672}
+  .count.warn{color:#c0502e}
+  button{
+    font:inherit;font-weight:700;border:0;border-radius:999px;cursor:pointer;
+    padding:11px 20px;color:#fff;background:var(--accent);transition:background .2s,transform .1s,opacity .2s;
+  }
+  button:hover:not(:disabled){background:var(--accent-d)}
+  button:active:not(:disabled){transform:scale(.97)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  button.ghost{background:#ffffff26;border:1px solid #fff6}
+  button.ghost:hover{background:#ffffff3d}
+
+  .paper{
+    position:absolute;top:0;left:0;right:0;margin:0 auto;width:100%;display:none;
+    background-color:var(--paper);background-position:0 20px;
+    border-radius:14px;box-shadow:0 10px 30px #0004;padding:20px 20px;
+    height:calc(var(--lh) * 9 + 40px);
+    white-space:pre-wrap;word-break:break-word;overflow:hidden;transform-origin:center;
+  }
+
+  /* 종이접기 연출 */
+  .ori{position:absolute;left:50%;width:240px;height:180px;margin-left:-120px;display:none;
+    perspective:900px;filter:drop-shadow(0 8px 10px #0004)}
+  .ori>div{position:absolute;background:var(--paper)}
+  #oBot{left:0;top:90px;width:240px;height:90px}
+  #oTop{left:0;top:0;width:240px;height:90px;transform-origin:50% 100%}
+  #fL,#fR{top:90px;width:60px;height:60px;display:none;background:var(--paper-d)}
+  #fL{left:0;clip-path:polygon(0 0,100% 0,0 100%);transform-origin:100% 0}
+  #fR{left:180px;clip-path:polygon(0 0,100% 0,100% 100%);transform-origin:0 0}
+  #strip{left:0;top:150px;width:240px;height:30px;transform-origin:50% 0;display:none;background:var(--paper-d)}
+
+  .boat{position:fixed;z-index:3;width:120px;height:70px;display:none;pointer-events:none}
+  .boat svg{width:100%;height:100%;display:block;filter:drop-shadow(0 5px 5px #0004)}
+  .boat .bob{animation:bob 2.2s ease-in-out infinite;transform-origin:50% 90%}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(3px) rotate(3deg)}}
+
+  .message{
+    position:absolute;left:0;right:0;top:40px;text-align:center;opacity:0;pointer-events:none;
+    transition:opacity 1.6s ease;padding:0 8px;
+  }
+  .message.show{opacity:1;pointer-events:auto}
+  .message p.big{font-family:var(--serif);font-size:clamp(21px,3.6vw,28px);line-height:1.6;margin:0 0 10px;font-weight:700;text-shadow:0 2px 12px #0006}
+  .message p.small{font-family:var(--serif);font-size:16px;line-height:1.8;margin:0 0 22px;opacity:.94;text-shadow:0 1px 8px #0006}
+
+  .water{position:fixed;left:0;right:0;bottom:0;height:34vh;min-height:190px;z-index:1;
+    background:linear-gradient(180deg,var(--water1),var(--water2))}
+  .water svg{position:absolute;left:0;top:-28px;width:200%;height:30px;animation:wave 9s linear infinite}
+  .water svg.w2{top:-20px;opacity:.55;animation-duration:14s;animation-direction:reverse}
+  @keyframes wave{to{transform:translateX(-50%)}}
+
+  .note{position:fixed;bottom:8px;left:0;right:0;text-align:center;font-size:12px;color:#fffc;z-index:4;pointer-events:none}
+
+  @media (prefers-reduced-motion:reduce){
+    .water svg,.stars,.boat .bob{animation:none}
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<main>
+  <h1>고민 종이배</h1>
+  <p class="sub">마음속 고민을 적어 종이배로 접어 흘려보내세요.<br>적은 내용은 어디에도 저장되지 않아요.</p>
+
+  <div class="stage" id="stage">
+    <form class="card" id="card" autocomplete="off">
+      <textarea id="text" maxlength="500" spellcheck="false" autocomplete="off"
+        placeholder="요즘 마음을 무겁게 하는 고민이나 걱정을 편하게 적어보세요."></textarea>
+      <div class="row">
+        <span class="count" id="count">0 / 500</span>
+        <button type="submit" id="send" disabled>종이배 접어 흘려보내기</button>
+      </div>
+    </form>
+
+    <div class="paper" id="paper" aria-hidden="true"></div>
+
+    <div class="ori" id="ori" aria-hidden="true">
+      <div id="oBot"></div>
+      <div id="oTop"></div>
+      <div id="fL"></div>
+      <div id="fR"></div>
+      <div id="strip"></div>
+    </div>
+
+    <div class="message" id="message" role="status" aria-live="polite">
+      <p class="big" id="msgBig"></p>
+      <p class="small" id="msgSmall"></p>
+      <button type="button" class="ghost" id="again">또 흘려보낼 고민이 있어요</button>
+    </div>
+  </div>
+</main>
+
+<div class="boat" id="boat" aria-hidden="true">
+  <div class="bob">
+    <!-- 돛은 낮고 작게, 선체는 넓게 -->
+    <svg viewBox="0 0 120 70">
+      <polygon points="60,18 60,42 30,42" fill="#fffdf6"/>
+      <polygon points="60,24 60,42 92,42" fill="#ece5cf"/>
+      <polygon points="6,44 114,44 96,64 24,64" fill="#fffdf6"/>
+      <polygon points="6,44 60,44 60,64 24,64" fill="#f1ead3"/>
+      <line x1="60" y1="18" x2="60" y2="44" stroke="#cfc7ad" stroke-width="1.2"/>
+    </svg>
+  </div>
+</div>
+
+<div class="water" aria-hidden="true">
+  <svg class="w2" viewBox="0 0 1200 30" preserveAspectRatio="none"><path d="M0 15 Q75 0 150 15 T300 15 T450 15 T600 15 T750 15 T900 15 T1050 15 T1200 15 V30 H0Z" fill="#6fa6cf"/></svg>
+  <svg viewBox="0 0 1200 30" preserveAspectRatio="none"><path d="M0 15 Q75 30 150 15 T300 15 T450 15 T600 15 T750 15 T900 15 T1050 15 T1200 15 V30 H0Z" fill="#3f78a8"/></svg>
+</div>
+<div class="note">입력한 내용은 저장되거나 전송되지 않으며, 흘려보내면 사라집니다.</div>
+
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const card = $('card'), text = $('text'), count = $('count'), send = $('send'),
+        paper = $('paper'), boat = $('boat'), message = $('message'),
+        msgBig = $('msgBig'), msgSmall = $('msgSmall'), again = $('again'),
+        ori = $('ori'), oTop = $('oTop'), oBot = $('oBot'), fL = $('fL'), fR = $('fR'), strip = $('strip');
+
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const T = ms => reduce ? Math.min(ms, 250) : ms;
+  const sleep = ms => new Promise(r => setTimeout(r, T(ms)));
+  const LIGHT = '#fffdf6', DARK = '#ebe3c8';
+
+  const messages = [
+    ['이 고민은 이제 물결 따라 멀어졌어요.', '당신은 이미 충분히 잘 버텨왔고, 이 일도 반드시 해결될 거예요.'],
+    ['걱정은 강물에 맡기고, 마음은 가볍게.', '지금 느끼는 무거움은 지나가요. 모든 일은 좋은 방향으로 풀려갈 거예요.'],
+    ['잘 흘려보냈어요.', '답은 당신 안에 있고, 시간이 그 길을 열어줄 거예요. 반드시 해결됩니다.'],
+    ['이제 한결 숨쉬기 편해졌나요?', '당신이 애쓴 만큼 상황도 분명 나아질 거예요. 걱정 마세요, 다 잘 풀릴 거예요.'],
+    ['고민은 떠났고, 당신은 여기 남았어요.', '오늘도 수고했어요. 이 모든 일은 결국 잘 해결될 거예요.'],
+    ['물결이 데려가 줄 거예요.', '혼자 끌어안지 않아도 괜찮아요. 이 고민도 곧 풀리고, 마음에 봄이 올 거예요.'],
+    ['한 걸음 가벼워졌어요.', '지금까지 잘해왔듯이, 앞으로도 잘 헤쳐나갈 수 있어요. 반드시 해결될 거예요.'],
+    ['밤이 지나면 아침이 와요.', '지금의 걱정은 내일의 이야기가 될 거예요. 모든 일이 제자리를 찾아갈 거예요.'],
+    ['당신의 마음을 믿어요.', '고민할 만큼 진심이었던 당신이니, 그 일도 좋은 결말을 맞이할 거예요.'],
+    ['이제 바다가 맡아줄게요.', '걱정은 넓은 바다에서 잔잔해질 거예요. 당신에게 좋은 일이 찾아올 거예요.']
+  ];
+
+  function update(){
+    const n = text.value.length;
+    count.textContent = n + ' / 500';
+    count.classList.toggle('warn', n >= 480);
+    send.disabled = text.value.trim().length === 0;
+  }
+  text.addEventListener('input', update);
+
+  const run = (el, kf, ms, easing = 'ease-in-out') =>
+    el.animate(kf, {duration: T(ms), easing, fill: 'forwards'}).finished;
+
+  // 접히는 면: 처음엔 뒷면(어두운 색) → 90도를 지나면 앞면 색으로 바뀜
+  const flipKf = (tf0, tf1, from, to) => [
+    {transform: tf0, backgroundColor: from},
+    {backgroundColor: from, offset: .49},
+    {backgroundColor: to, offset: .5},
+    {transform: tf1, backgroundColor: to}
+  ];
+
+  function resetOrigami(){
+    [ori, oTop, oBot, fL, fR, strip].forEach(el => {
+      el.getAnimations().forEach(a => a.cancel());
+      el.style.clipPath = '';
+      el.style.backgroundImage = '';
+    });
+    fL.style.display = fR.style.display = strip.style.display = 'none';
+    ori.style.display = 'none';
+  }
+
+  async function release(){
+    const content = text.value.trim();
+    if(!content) return;
+    resetOrigami();
+
+    // 1. 편지지로 교체 (내용은 연출용으로만 잠시 사용)
+    paper.textContent = content;
+    text.value = ''; update();
+    card.style.display = 'none';
+    paper.style.display = 'block';
+    const pr = paper.getBoundingClientRect();
+    const sr = $('stage').getBoundingClientRect();
+
+    // 2. 글씨가 옅어지며 종이가 정사각에 가까운 한 장으로 줄어듦
+    const fade = paper.animate([{color: '#2f3a4f'}, {color: 'transparent'}], {duration: T(900), fill: 'forwards'});
+    const shrink = paper.animate([
+      {transform: 'scale(1)'},
+      {transform: `scale(${240 / pr.width}, ${180 / pr.height})`}
+    ], {duration: T(1100), easing: 'ease-in-out', fill: 'forwards'});
+    await fade.finished;
+    paper.textContent = '';                      // 글자는 여기서 완전히 지워짐
+    paper.style.backgroundImage = 'none';
+    await shrink.finished;
+
+    // 3. 접을 종이(240x180) 준비
+    ori.style.top = (pr.top - sr.top + pr.height / 2 - 90) + 'px';
+    ori.style.display = 'block';
+    paper.style.display = 'none';
+    paper.getAnimations().forEach(a => a.cancel());
+    paper.style.backgroundImage = '';
+    await sleep(350);
+
+    // 4. 반으로 접기: 윗부분을 아래로 덮음
+    await run(oTop, flipKf('rotateX(0deg)', 'rotateX(180deg)', LIGHT, DARK), 1100);
+    await sleep(350);
+
+    // 5. 위쪽 양 모서리를 가운데로 접기
+    oTop.style.clipPath = 'polygon(0 0,100% 0,100% 33.3%,75% 100%,25% 100%,0 33.3%)';
+    oBot.style.clipPath = 'polygon(25% 0,75% 0,100% 66.7%,100% 100%,0 100%,0 66.7%)';
+    fL.style.display = fR.style.display = 'block';
+    await Promise.all([
+      run(fL, flipKf('rotate3d(-1,1,0,0deg)', 'rotate3d(-1,1,0,180deg)', DARK, LIGHT), 1000),
+      run(fR, flipKf('rotate3d(1,1,0,0deg)', 'rotate3d(1,1,0,180deg)', DARK, LIGHT), 1000)
+    ]);
+    await sleep(350);
+
+    // 6. 아래 띠를 위로 접어 올리기
+    strip.style.display = 'block';
+    await run(strip, [
+      {transform: 'rotateX(0deg)', backgroundColor: DARK, backgroundImage: 'none'},
+      {backgroundColor: DARK, backgroundImage: 'none', offset: .49},
+      {backgroundColor: LIGHT, backgroundImage: 'linear-gradient(#e6dec4, #fffdf6 55%)', offset: .5},
+      {transform: 'rotateX(180deg)', backgroundColor: LIGHT, backgroundImage: 'linear-gradient(#e6dec4, #fffdf6 55%)'}
+    ], 1000);
+    await sleep(450);
+
+    // 7. 펼쳐서 종이배 완성
+    const o = ori.getBoundingClientRect();
+    const startX = o.left + o.width / 2 - 60;
+    const startY = o.top + o.height / 2 - 35;
+    boat.style.left = startX + 'px';
+    boat.style.top = startY + 'px';
+    boat.style.display = 'block';
+    const poof = run(ori, [
+      {transform: 'scale(1)', opacity: 1},
+      {transform: 'scale(.55)', opacity: 0}
+    ], 700);
+    const appear = run(boat, [
+      {transform: 'translate(0,0) scale(.5,.8)', opacity: 0},
+      {transform: 'translate(0,0) scale(1)', opacity: 1}
+    ], 700, 'ease-out');
+    await Promise.all([poof, appear]);
+    resetOrigami();
+
+    // 8. 물 위로 내려앉기
+    const water = document.querySelector('.water').getBoundingClientRect();
+    const waterY = water.top - 44;
+    await run(boat, [
+      {transform: 'translate(0,0)', opacity: 1},
+      {transform: `translate(0,${waterY - startY}px)`, opacity: 1}
+    ], 1200, 'ease-in');
+
+    // 9. 물 위를 흘러감
+    const dist = innerWidth - startX + 140;
+    const dy = waterY - startY;
+    const sail = boat.animate([
+      {transform: `translate(0,${dy}px)`, opacity: 1},
+      {transform: `translate(${dist * 0.55}px,${dy + 4}px)`, opacity: 1, offset: .6},
+      {transform: `translate(${dist}px,${dy}px)`, opacity: 0}
+    ], {duration: T(8000), easing: 'cubic-bezier(.4,0,.8,.9)', fill: 'forwards'});
+
+    // 흘러가는 중간에 긍정 메시지 등장
+    await sleep(4200);
+    const m = messages[Math.floor(Math.random() * messages.length)];
+    msgBig.textContent = m[0];
+    msgSmall.textContent = m[1];
+    message.classList.add('show');
+
+    await sail.finished;
+    boat.style.display = 'none';
+    boat.getAnimations().forEach(a => a.cancel());
+  }
+
+  card.addEventListener('submit', e => { e.preventDefault(); send.disabled = true; release(); });
+
+  again.addEventListener('click', () => {
+    message.classList.remove('show');
+    msgBig.textContent = ''; msgSmall.textContent = '';
+    setTimeout(() => { card.style.display = 'flex'; text.focus(); }, 400);
+  });
+
+  // 새로고침/뒤로가기 시에도 입력 내용이 복원되지 않도록
+  addEventListener('pageshow', () => { text.value = ''; update(); });
+  update();
+})();
+</script>
+</body>
+</html>
