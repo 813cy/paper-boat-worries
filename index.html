@@ -92,7 +92,12 @@
   #fL,#fR{top:90px;width:60px;height:60px;display:none;background:var(--paper-d)}
   #fL{left:0;clip-path:polygon(0 0,100% 0,0 100%);transform-origin:100% 0}
   #fR{left:180px;clip-path:polygon(0 0,100% 0,100% 100%);transform-origin:0 0}
-  #strip{left:0;top:150px;width:240px;height:30px;transform-origin:50% 0;display:none;background:var(--paper-d)}
+  #strip,#strip2{left:0;top:150px;width:240px;height:30px;transform-origin:50% 0;display:none;background:var(--paper-d)}
+  .caption{
+    position:absolute;left:0;right:0;text-align:center;opacity:0;pointer-events:none;
+    font-family:var(--serif);font-size:clamp(22px,4vw,28px);font-weight:700;letter-spacing:.12em;
+    text-shadow:0 2px 14px #0007;
+  }
 
   .boat{position:fixed;z-index:3;width:120px;height:70px;display:none;pointer-events:none}
   .boat svg{width:100%;height:100%;display:block;filter:drop-shadow(0 5px 5px #0004)}
@@ -145,7 +150,9 @@
       <div id="fL"></div>
       <div id="fR"></div>
       <div id="strip"></div>
+      <div id="strip2"></div>
     </div>
+    <div class="caption" id="caption" aria-hidden="true"></div>
 
     <div class="message" id="message" role="status" aria-live="polite">
       <p class="big" id="msgBig"></p>
@@ -180,7 +187,8 @@
   const card = $('card'), text = $('text'), count = $('count'), send = $('send'),
         paper = $('paper'), boat = $('boat'), message = $('message'),
         msgBig = $('msgBig'), msgSmall = $('msgSmall'), again = $('again'),
-        ori = $('ori'), oTop = $('oTop'), oBot = $('oBot'), fL = $('fL'), fR = $('fR'), strip = $('strip');
+        ori = $('ori'), oTop = $('oTop'), oBot = $('oBot'), fL = $('fL'), fR = $('fR'),
+        strip = $('strip'), strip2 = $('strip2'), caption = $('caption');
 
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const T = ms => reduce ? Math.min(ms, 250) : ms;
@@ -197,8 +205,21 @@
     ['한 걸음 가벼워졌어요.', '지금까지 잘해왔듯이, 앞으로도 잘 헤쳐나갈 수 있어요. 반드시 해결될 거예요.'],
     ['밤이 지나면 아침이 와요.', '지금의 걱정은 내일의 이야기가 될 거예요. 모든 일이 제자리를 찾아갈 거예요.'],
     ['당신의 마음을 믿어요.', '고민할 만큼 진심이었던 당신이니, 그 일도 좋은 결말을 맞이할 거예요.'],
-    ['이제 바다가 맡아줄게요.', '걱정은 넓은 바다에서 잔잔해질 거예요. 당신에게 좋은 일이 찾아올 거예요.']
+    ['이제 바다가 맡아줄게요.', '걱정은 넓은 바다에서 잔잔해질 거예요. 당신에게 좋은 일이 찾아올 거예요.'],
+    ['오늘의 무게는 여기까지.', '내일의 당신은 오늘보다 훨씬 가벼울 거예요. 모든 일이 알맞은 때에 풀릴 거예요.'],
+    ['작은 한숨이 큰 위로가 돼요.', '여기까지 온 것만으로도 충분해요. 이 걱정도 반드시 지나갈 거예요.'],
+    ['구름 뒤에도 해는 있어요.', '지금은 보이지 않아도 길은 열려 있어요. 곧 좋은 소식이 찾아올 거예요.'],
+    ['당신은 생각보다 단단해요.', '수많은 날을 지나온 당신이니, 이번 일도 분명 잘 이겨낼 거예요.'],
+    ['바람이 순해졌어요.', '마음 쓰였던 일들이 하나씩 제자리를 찾을 거예요. 반드시 괜찮아질 거예요.'],
+    ['잠시 쉬어가도 괜찮아요.', '쉬는 동안에도 일은 풀려가고 있어요. 결국 모든 게 잘될 거예요.'],
+    ['이야기해줘서 고마워요.', '꺼내놓는 것만으로 반은 풀린 거예요. 나머지도 반드시 해결될 거예요.'],
+    ['별빛이 곁에 있을 거예요.', '어두운 밤이 길어도 아침은 꼭 와요. 당신의 걱정은 곧 웃음이 될 거예요.'],
+    ['지금의 흔들림은 자라는 중이에요.', '뿌리가 깊어지는 시간이니 걱정 말아요. 모든 일이 잘 풀릴 거예요.'],
+    ['당신의 내일을 응원해요.', '오늘 흘려보낸 만큼 내일은 맑을 거예요. 반드시 좋은 방향으로 나아갈 거예요.']
   ];
+
+  // 종이를 한 번 접을 때마다 보여줄 한 단어
+  const words = ['숨 고르기', '내려놓기', '비우기', '덜어내기', '돌아보기', '흘려보내기', '평온'];
 
   function update(){
     const n = text.value.length;
@@ -220,12 +241,13 @@
   ];
 
   function resetOrigami(){
-    [ori, oTop, oBot, fL, fR, strip].forEach(el => {
+    [ori, oTop, oBot, fL, fR, strip, strip2, caption].forEach(el => {
       el.getAnimations().forEach(a => a.cancel());
       el.style.clipPath = '';
       el.style.backgroundImage = '';
     });
-    fL.style.display = fR.style.display = strip.style.display = 'none';
+    caption.textContent = '';
+    fL.style.display = fR.style.display = strip.style.display = strip2.style.display = 'none';
     ori.style.display = 'none';
   }
 
@@ -261,31 +283,73 @@
     paper.style.backgroundImage = '';
     await sleep(350);
 
-    // 4. 반으로 접기: 윗부분을 아래로 덮음
-    await run(oTop, flipKf('rotateX(0deg)', 'rotateX(180deg)', LIGHT, DARK), 1100);
-    await sleep(350);
-
-    // 5. 위쪽 양 모서리를 가운데로 접기
-    oTop.style.clipPath = 'polygon(0 0,100% 0,100% 33.3%,75% 100%,25% 100%,0 33.3%)';
-    oBot.style.clipPath = 'polygon(25% 0,75% 0,100% 66.7%,100% 100%,0 100%,0 66.7%)';
-    fL.style.display = fR.style.display = 'block';
-    await Promise.all([
-      run(fL, flipKf('rotate3d(-1,1,0,0deg)', 'rotate3d(-1,1,0,180deg)', DARK, LIGHT), 1000),
-      run(fR, flipKf('rotate3d(1,1,0,0deg)', 'rotate3d(1,1,0,180deg)', DARK, LIGHT), 1000)
-    ]);
-    await sleep(350);
-
-    // 6. 아래 띠를 위로 접어 올리기
-    strip.style.display = 'block';
-    await run(strip, [
+    // 4. 한 번 접을 때마다 한 단어를 띄우고, 천천히 접기
+    caption.style.top = (parseFloat(ori.style.top) + 180 + 34) + 'px';
+    const showWord = w => {
+      caption.textContent = w;
+      return run(caption, [
+        {opacity: 0, transform: 'translateY(8px)'},
+        {opacity: 1, transform: 'translateY(0)'}
+      ], 900, 'ease-out');
+    };
+    const hideWord = () => run(caption, [
+      {opacity: 1, transform: 'translateY(0)'},
+      {opacity: 0, transform: 'translateY(-6px)'}
+    ], 800, 'ease-in');
+    const BRIM = 'linear-gradient(#e6dec4, #fffdf6 55%)';
+    const brimKf = [
       {transform: 'rotateX(0deg)', backgroundColor: DARK, backgroundImage: 'none'},
       {backgroundColor: DARK, backgroundImage: 'none', offset: .49},
-      {backgroundColor: LIGHT, backgroundImage: 'linear-gradient(#e6dec4, #fffdf6 55%)', offset: .5},
-      {transform: 'rotateX(180deg)', backgroundColor: LIGHT, backgroundImage: 'linear-gradient(#e6dec4, #fffdf6 55%)'}
-    ], 1000);
-    await sleep(450);
+      {backgroundColor: LIGHT, backgroundImage: BRIM, offset: .5},
+      {transform: 'rotateX(180deg)', backgroundColor: LIGHT, backgroundImage: BRIM}
+    ];
+    const step = async (word, fold) => {
+      await showWord(word);
+      await sleep(600);
+      await fold();
+      await sleep(1000);
+      await hideWord();
+      await sleep(400);
+    };
 
-    // 7. 펼쳐서 종이배 완성
+    // 4-1. 반으로 접기: 윗부분을 아래로 덮음
+    await step(words[0], () => run(oTop, flipKf('rotateX(0deg)', 'rotateX(180deg)', LIGHT, DARK), 2600));
+
+    // 4-2. 왼쪽 위 모서리를 가운데로
+    await step(words[1], () => {
+      oTop.style.clipPath = 'polygon(0 0,100% 0,100% 33.3%,75% 100%,25% 100%,0 33.3%)';
+      oBot.style.clipPath = 'polygon(25% 0,75% 0,100% 66.7%,100% 100%,0 100%,0 66.7%)';
+      fL.style.display = fR.style.display = 'block';   // 오른쪽은 아직 접히지 않은 채 제자리
+      return run(fL, flipKf('rotate3d(-1,1,0,0deg)', 'rotate3d(-1,1,0,180deg)', DARK, LIGHT), 2400);
+    });
+
+    // 4-3. 오른쪽 위 모서리를 가운데로
+    await step(words[2], () =>
+      run(fR, flipKf('rotate3d(1,1,0,0deg)', 'rotate3d(1,1,0,180deg)', DARK, LIGHT), 2400));
+
+    // 4-4. 앞쪽 아래 띠를 위로
+    await step(words[3], () => {
+      strip.style.display = 'block';
+      return run(strip, brimKf, 2400);
+    });
+
+    // 4-5. 뒤집기
+    await step(words[4], () => run(ori, [
+      {transform: 'perspective(900px) rotateY(0deg)'},
+      {transform: 'perspective(900px) rotateY(180deg)'}
+    ], 2800));
+
+    // 4-6. 뒤쪽 아래 띠도 위로
+    await step(words[5], () => {
+      oTop.style.clipPath = 'polygon(0 33.3%,100% 33.3%,75% 100%,25% 100%)';
+      oBot.style.clipPath = 'polygon(25% 0,75% 0,100% 66.7%,0 66.7%)';
+      strip2.style.display = 'block';
+      return run(strip2, brimKf, 2400);
+    });
+
+    // 5. 펼쳐서 종이배 완성
+    await showWord(words[6]);
+    await sleep(700);
     const o = ori.getBoundingClientRect();
     const startX = o.left + o.width / 2 - 60;
     const startY = o.top + o.height / 2 - 35;
@@ -295,12 +359,14 @@
     const poof = run(ori, [
       {transform: 'scale(1)', opacity: 1},
       {transform: 'scale(.55)', opacity: 0}
-    ], 700);
+    ], 1800);
     const appear = run(boat, [
       {transform: 'translate(0,0) scale(.5,.8)', opacity: 0},
       {transform: 'translate(0,0) scale(1)', opacity: 1}
-    ], 700, 'ease-out');
+    ], 1800, 'ease-out');
     await Promise.all([poof, appear]);
+    await sleep(900);
+    await hideWord();
     resetOrigami();
 
     // 8. 물 위로 내려앉기
